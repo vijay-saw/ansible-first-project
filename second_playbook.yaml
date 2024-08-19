@@ -1,8 +1,0 @@
----
-- name: Install and Configure Nginx
-  hosts: backend
-  become: true
-  roles:
-    - nginx
-
-

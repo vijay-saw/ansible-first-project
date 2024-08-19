@@ -1,6 +1,0 @@
----
-# vars file for ec2_role
-instance_type: t2.micro
-security_group: default
-image_id: ami-04a81a99f5ec58529
-region: us-east-1
