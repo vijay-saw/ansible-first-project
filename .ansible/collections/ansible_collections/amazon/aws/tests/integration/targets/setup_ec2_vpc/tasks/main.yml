@@ -1,0 +1,3 @@
+---
+- ansible.builtin.debug:
+    msg: VPC Cleanup module loaded

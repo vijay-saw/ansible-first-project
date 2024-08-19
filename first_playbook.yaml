@@ -1,0 +1,8 @@
+---
+- name: apache2installation
+  hosts: frontend
+  become: true
+  roles:
+   - bsmeding.docker
+
+
