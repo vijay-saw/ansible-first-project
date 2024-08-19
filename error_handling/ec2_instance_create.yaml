@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Create 3 instances (one Amazon Linux and two Ubuntu)
+      amazon.aws.ec2_instance:
+        name: "{{item.name}}"
+        key_name: "project"  # Use the key pair name
+        instance_type: t2.micro
+        security_group: default
+        region: us-east-1
+        aws_access_key: "{{ aws_access_key }}"  # from vault
+        aws_secret_key: "{{ aws_secret_key }}"
+        network:
+          assign_public_ip: true
+        image_id: "{{ item.image }}"
+        # tags:
+        #   Environment: "{{ item.name }}"
+      loop:
+        - { image: "ami-0ae8f15ae66fe8cda", name: "amazon-ec2" }
+        - { image: "ami-04a81a99f5ec58529", name: "ubuntu-ec2" }
+        - { image: "ami-04a81a99f5ec58529", name: "ubuntu-ec3" }

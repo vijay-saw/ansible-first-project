@@ -1,0 +1,11 @@
+---
+- name: Shutdown Ubuntu Instances
+  hosts: all
+  become: true
+  tasks:
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Shutdown Ubuntu instances only
+      ansible.builtin.command: /sbin/shutdown -h now
+      when: ansible_facts['os_family'] == "RedHat"
