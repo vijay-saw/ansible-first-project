@@ -1,0 +1,75 @@
+---
+- name: Jenkins installation
+  hosts: all
+  become: true  # Use sudo to perform actions
+  gather_facts: false  
+  tasks:
+    - name: Checking Jenkins version
+      shell: jenkins --version 
+      register: jenkins_version  
+      ignore_errors: yes 
+
+    - name: Display Jenkins version
+      debug:
+        msg: "Jenkins version is {{ jenkins_version.stdout }}"  # Printing the Jenkins version if installed
+      when: jenkins_version.rc == 0  
+
+    - name: Download Jenkins Repository Key
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key  
+        dest: /usr/share/keyrings/jenkins-keyring.asc  
+
+    - name: Add Jenkins repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"  # Add the Jenkins repository using the downloaded key
+        state: present  
+        filename: jenkins  
+      notify: Update the apt package index  
+
+    - name: Install Jenkins
+      ansible.builtin.apt:
+        name: jenkins  
+        state: present  
+      register: jenkins_install_result  
+
+    - name: Jenkins installation errors
+      ansible.builtin.fail:
+        msg: "Jenkins installation failed. Please check logs and resolve any issues."  # Fail the playbook if Jenkins installation failed
+      when: jenkins_install_result.failed  # Only fail if the installation was not successful
+
+    - name: Start and enable Jenkins service
+      ansible.builtin.service:
+        name: jenkins  
+        state: started  
+        enabled: yes  # Ensure Jenkins starts on boot
+      register: jenkins_service_result 
+
+    - name: Jenkins service start errors
+      ansible.builtin.fail:
+        msg: "Jenkins service start failed. Please check logs and resolve any issues."  # Fail the playbook if Jenkins service failed to start
+      when: jenkins_service_result.failed  # Only fail if the service did not start successfully
+
+    - name: Check Jenkins service status
+      ansible.builtin.command:
+        cmd: systemctl status jenkins --no-pager --quiet
+      register: jenkins_status
+      ignore_errors: yes
+
+    - name: Display Jenkins service status
+      debug:
+        msg: "Jenkins service status: {{ jenkins_status.rc }}"
+      when: jenkins_status is defined
+
+    - name: Get Jenkins password
+      ansible.builtin.command:
+        cmd: cat /var/lib/jenkins/secrets/initialAdminPassword  # Retrieve the Jenkins initial admin password
+      register: jenkins_initial_password  
+
+    - name: Jenkins password read errors
+      ansible.builtin.fail:
+        msg: "Failed to read Jenkins initial admin password"  # Fail the playbook if reading the password failed
+      when: jenkins_initial_password.failed  # Only fail if the password read operation was unsuccessful
+
+    - name: Display Jenkins password
+      ansible.builtin.debug:
+        var: jenkins_initial_password.stdout  # Print the Jenkins initial admin password
